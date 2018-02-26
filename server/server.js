@@ -17,7 +17,7 @@ app.post('/todo', (req, res) =>{
   newTodo.save().then((result) =>{
     res.send(result);
   }, (e) =>{
-    res.send(e);
+    res.status(400).send(e);
   });
 });
 

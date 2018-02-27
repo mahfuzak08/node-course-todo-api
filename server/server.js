@@ -7,6 +7,7 @@ var {Users} = require('./model/users');
 var {Todo} = require('./model/todo');
 
 var app = express();
+const post = process.env.POST || 3000;
 
 app.use(bodyParser.json());
 
@@ -50,8 +51,8 @@ app.get('/todo/:id', (req, res) =>{
   });
 });
 
-app.listen(3000, () =>{
-  console.log('Server is up in 3000 port.');
+app.listen(post, () =>{
+  console.log(`Server is up in ${post} port.`);
 });
 
 //

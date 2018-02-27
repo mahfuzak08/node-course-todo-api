@@ -51,6 +51,27 @@ app.get('/todo/:id', (req, res) =>{
   });
 });
 
+
+// DELETE /todo/122342
+app.delete('/todo/:id', (req, res) =>{
+  var id = req.params.id;
+  if(! ObjectID.isValid(id)){
+    res.status(404).send('ID is not valid');
+  }
+
+  Todo.findByIdAndRemove(id).then((result) =>{
+    if(!result){
+      res.status(404).send('No todo found by this id');
+    }else{
+      res.send({result});
+    }
+  }, (e) =>{
+    res.status(400).send(e);
+  });
+});
+
+
+
 app.listen(port, () =>{
   console.log(`Server is up in ${port} port.`);
 });

@@ -7,7 +7,7 @@ var {Users} = require('./model/users');
 var {Todo} = require('./model/todo');
 
 var app = express();
-const post = process.env.POST || 3000;
+const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
@@ -51,8 +51,8 @@ app.get('/todo/:id', (req, res) =>{
   });
 });
 
-app.listen(post, () =>{
-  console.log(`Server is up in ${post} port.`);
+app.listen(port, () =>{
+  console.log(`Server is up in ${port} port.`);
 });
 
 //

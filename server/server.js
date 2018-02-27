@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var express = require('express');
 var bodyParser = require('body-parser');
 var {ObjectID} = require('mongodb');
@@ -63,6 +64,34 @@ app.delete('/todo/:id', (req, res) =>{
     if(!result){
       res.status(404).send('No todo found by this id');
     }else{
+      res.send({result});
+    }
+  }, (e) =>{
+    res.status(400).send(e);
+  });
+});
+
+// For update a todo
+// PATCH /todo/122342
+app.patch('/todo/:id', (req, res) =>{
+  var id = req.params.id;
+  var body = _.pick(req.body, ['task', 'completed']);
+
+  if(! ObjectID.isValid(id)){
+    res.status(404).send('ID is not valid');
+  }
+
+  if(_.isBoolean(body.completed) && body.completed){
+    body.completedAt = new Date().getTime();
+  } else {
+    body.completed = false;
+    body.completedAt = null;
+  }
+
+  Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((result) =>{
+    if(!result){
+      res.status(404).send('No todo found by this id');
+    } else {
       res.send({result});
     }
   }, (e) =>{

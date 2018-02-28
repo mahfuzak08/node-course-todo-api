@@ -4,6 +4,7 @@ const {ObjectID} = require('mongodb');
 
 const {app} = require('./../server');
 const {Todo} = require('./../model/todo');
+const {Users} = require('./../model/users');
 const {sampleTodos, populateTodos, sampleUsers, populateUsers} = require('./seed/seed');
 
 beforeEach(populateUsers);
@@ -162,4 +163,79 @@ describe('PATCH /todo/:id', () =>{
       })
       .end(done);
   });
+});
+
+describe('GET /user/me', () =>{
+  it('should return user if authenticate', (done) =>{
+    request(app)
+      .get('/user/me')
+      .set('x-auth', sampleUsers[0].tokens[0].token)
+      .expect(200)
+      .expect((res) =>{
+        expect(res.body._id).toBe(sampleUsers[0]._id.toHexString());
+        expect(res.body.email).toBe(sampleUsers[0].email);
+      })
+      .end(done);
+  });
+
+  it('should return 401 if not authenticate', (done) =>{
+    request(app)
+      .get('/user/me')
+      .set('x-auth', 'asasdfasdfasd fasdfasdfasdfasdfasdfasdfasd fasd fasdfasdfasdfasdf')
+      .expect(401)
+      .expect((res) =>{
+        expect(res.body).toEqual({});
+      })
+      .end(done);
+  });
+});
+
+describe('POST /user', () =>{
+  it('should create a user', (done) =>{
+    var name = 'example';
+    var email = 'example@example.com';
+    var password = 'abc!123';
+
+    request(app)
+      .post('/user')
+      .send({name, email, password})
+      .expect(200)
+      .expect((res) =>{
+        expect(res.headers['x-auth']).toExist();
+        expect(res.body._id).toExist();
+        expect(res.body.email).toBe(email);
+      })
+      .end((err) =>{
+        if(err) return done(err);
+
+        Users.findOne({email}).then((user) =>{
+          expect(user).toExist();
+          expect(user.password).toNotBe(password);
+          done();
+        });
+      });
+  });
+
+  it('should return validation error if request invalid', (done) =>{
+    var name = 'example';
+    var email = 'examplexample.com';
+    var password = 'abc23';
+
+    request(app)
+      .post('/user')
+      .send({name, email, password})
+      .expect(400)
+      .end(done);
+  });
+
+  it('should not create user if email in use', (done) =>{
+    var email = 'rabbi@gmail.com';
+
+    request(app)
+      .post('/user')
+      .send({email})
+      .expect(400)
+      .end(done);
+  });
+
 });

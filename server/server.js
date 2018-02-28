@@ -1,3 +1,5 @@
+require('./config/config.js');
+
 var _ = require('lodash');
 var express = require('express');
 var bodyParser = require('body-parser');
@@ -99,33 +101,21 @@ app.patch('/todo/:id', (req, res) =>{
   });
 });
 
+app.post('/user', (req, res) =>{
+  var body = _.pick(req.body, ['name', 'email', 'password']);
+  var newUser = new Users(body);
 
+  newUser.save().then(() =>{
+    return newUser.generateAuthToken();
+  }).then((token) =>{
+    res.header('x-auth', token).send(newUser);
+  }).catch((e) =>{
+    res.status(400).send(e);
+  });
+});
 
 app.listen(port, () =>{
   console.log(`Server is up in ${port} port.`);
 });
-
-//
-// var newTodo = new Todo({
-//   task: 'Learning mongodb',
-//   completed: false
-// });
-//
-// newTodo.save().then((doc) =>{
-//   console.log('Task save successfully.', doc);
-// }, (e) =>{
-//   console.log('Unable to save task');
-// });
-
-
-// var newUsers = new users({
-//
-// });
-//
-// newUsers.save().then((doc) =>{
-//   console.log('User save successfully.', doc);
-// }, (e) =>{
-//   console.log('Unable to save User');
-// });
 
 module.exports = {app};

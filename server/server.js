@@ -15,10 +15,11 @@ const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
-app.post('/todo', (req, res) =>{
+app.post('/todo', authenticate, (req, res) =>{
   // console.log(req.body.task);
   var newTodo = new Todo({
-    task: req.body.task
+    task: req.body.task,
+    _creator: req.user._id
   });
   newTodo.save().then((result) =>{
     res.send(result);
@@ -27,9 +28,9 @@ app.post('/todo', (req, res) =>{
   });
 });
 
-app.get('/todo', (req, res) =>{
+app.get('/todo', authenticate, (req, res) =>{
   // console.log(req.body.task);
-  Todo.find().then((result) =>{
+  Todo.find({_creator: req.user._id}).then((result) =>{
     res.send({result});
   }, (e) =>{
     res.status(400).send(e);
@@ -37,13 +38,13 @@ app.get('/todo', (req, res) =>{
 });
 
 // GET /todo/122342
-app.get('/todo/:id', (req, res) =>{
+app.get('/todo/:id', authenticate, (req, res) =>{
   var id = req.params.id;
   if(! ObjectID.isValid(id)){
     res.status(404).send('ID is not valid');
   }
 
-  Todo.findById(id).then((result) =>{
+  Todo.findOne({_id: id, _creator: req.user._id}).then((result) =>{
     if(!result){
       res.status(404).send('No todo found by this id');
     }else{
@@ -57,13 +58,13 @@ app.get('/todo/:id', (req, res) =>{
 
 
 // DELETE /todo/122342
-app.delete('/todo/:id', (req, res) =>{
+app.delete('/todo/:id', authenticate, (req, res) =>{
   var id = req.params.id;
   if(! ObjectID.isValid(id)){
     res.status(404).send('ID is not valid');
   }
 
-  Todo.findByIdAndRemove(id).then((result) =>{
+  Todo.findOneAndRemove({_id: id, _creator: req.user._id}).then((result) =>{
     if(!result){
       res.status(404).send('No todo found by this id');
     }else{

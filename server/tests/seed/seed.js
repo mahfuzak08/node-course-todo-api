@@ -22,13 +22,17 @@ const sampleUsers = [
     _id: u2id,
     name: 'Roni',
     email: 'roni@gmail.com',
-    password: '123456'
+    password: '123456',
+    tokens: [{
+      access: 'auth',
+      token: jwt.sign({_id: u2id, access: 'auth'}, 'mahfuz123').toString()
+    }]
   }
 ];
 
 const sampleTodos = [
-  {_id: new ObjectID(), task: 'Learning nodeJS'},
-  {_id: new ObjectID(), task: 'Teach to other nodeJS', completed: true, completedAt: 234123}
+  {_id: new ObjectID(), task: 'Learning nodeJS', _creator: u1id},
+  {_id: new ObjectID(), task: 'Teach to other nodeJS', completed: true, completedAt: 234123, _creator: u2id}
 ];
 
 const populateTodos = (done) => {

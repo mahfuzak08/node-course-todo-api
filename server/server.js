@@ -58,21 +58,22 @@ app.get('/todo/:id', authenticate, (req, res) =>{
 
 
 // DELETE /todo/122342
-app.delete('/todo/:id', authenticate, (req, res) =>{
+app.delete('/todo/:id', authenticate, async (req, res) =>{
   var id = req.params.id;
   if(! ObjectID.isValid(id)){
     res.status(404).send('ID is not valid');
   }
 
-  Todo.findOneAndRemove({_id: id, _creator: req.user._id}).then((result) =>{
+  try{
+    var result = await Todo.findOneAndRemove({_id: id, _creator: req.user._id});
     if(!result){
       res.status(404).send('No todo found by this id');
     }else{
       res.send({result});
     }
-  }, (e) =>{
+  } catch (e) {
     res.status(400).send(e);
-  });
+  }
 });
 
 // For update a todo
@@ -103,41 +104,62 @@ app.patch('/todo/:id', (req, res) =>{
   });
 });
 
-app.post('/user', (req, res) =>{
-  var body = _.pick(req.body, ['name', 'email', 'password']);
-  var newUser = new Users(body);
-
-  newUser.save().then(() =>{
-    return newUser.generateAuthToken();
-  }).then((token) =>{
+app.post('/user', async (req, res) =>{
+  try{
+    var body = _.pick(req.body, ['name', 'email', 'password']);
+    var newUser = new Users(body);
+    await newUser.save();
+    var token = await newUser.generateAuthToken();
     res.header('x-auth', token).send(newUser);
-  }).catch((e) =>{
+  } catch (e) {
     res.status(400).send(e);
-  });
+  }
+
+  // newUser.save().then(() =>{
+  //   return newUser.generateAuthToken();
+  // }).then((token) =>{
+  //   res.header('x-auth', token).send(newUser);
+  // }).catch((e) =>{
+  //   res.status(400).send(e);
+  // });
 });
 
 app.get('/user/me', authenticate, (req, res) =>{
   res.send(req.user);
 })
 
-app.post('/user/login', (req, res) =>{
-  var body = _.pick(req.body, ['email', 'password']);
-
-  Users.findByCredentials(body.email, body.password).then((user) =>{
-    return user.generateAuthToken().then((token) =>{
-      res.header('x-auth', token).send(user);
-    });
-  }).catch((e) =>{
+app.post('/user/login', async (req, res) =>{
+  try{
+    var body = _.pick(req.body, ['email', 'password']);
+    var user = await Users.findByCredentials(body.email, body.password);
+    var token = await user.generateAuthToken();
+    res.header('x-auth', token).send(user);
+  } catch(e) {
     res.status(400).send();
-  })
+  }
+
+  // Users.findByCredentials(body.email, body.password).then((user) =>{
+  //   return user.generateAuthToken().then((token) =>{
+  //     res.header('x-auth', token).send(user);
+  //   });
+  // }).catch((e) =>{
+  //   res.status(400).send();
+  // })
 });
 
-app.delete('/user/me/token', authenticate, (req, res) =>{
-  req.user.removeToken(req.token).then(() =>{
+app.delete('/user/me/token', authenticate, async (req, res) =>{
+  try{
+    await req.user.removeToken(req.token);
     res.status(200).send('Logout Successfull...');
-  }, (e) =>{
+  } catch(e) {
     res.status(400).send(e);
-  })
+  }
+
+  // req.user.removeToken(req.token).then(() =>{
+  //   res.status(200).send('Logout Successfull...');
+  // }, (e) =>{
+  //   res.status(400).send(e);
+  // })
 });
 
 app.listen(port, () =>{
